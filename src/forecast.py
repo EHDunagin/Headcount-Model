@@ -1,6 +1,5 @@
 import polars as pl
 from datetime import date
-
 from preparation.roster import get_roster
 from preparation.months import generate_month_ranges
 
@@ -12,59 +11,18 @@ INFLATION_START = date(year=2025, month=1, day=1)
 INFLATION_FREQUENCY_IN_MONTHS = 12
 ROSTER_PATH = "../data/Personnel forecast - Personnel List.csv"
 
-
-def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_freq):
-    """
-    Generate a base forecast with rows for all employees in roster and active months in range with compensation and headcount data.
-
-    Inputs
-    start_date: start date of forecast range,
-    end_date: end date of forecast range,
-    infl_rate: inflation rate,
-    infl_start: start date for inflation increases,
-    infl_freq: number of months between inflation frequency
-
-    Output
-    Polars dataframe
-    """
-    # Generate the month ranges
-    month_ranges = generate_month_ranges(
-        START_DATE,
-        END_DATE,
-        INFLATION_RATE,
-        INFLATION_START,
-        INFLATION_FREQUENCY_IN_MONTHS,
-    )
-
-    # Create a DataFrame from the month ranges
-    forecast_base = pl.DataFrame(
-        month_ranges, schema=["start_of_month", "end_of_month", "inflation_factor"]
-    )
-
-    # Create a roster from input file
-    roster = get_roster(ROSTER_PATH)
-
-    # Cross join to roster
-    forecast_base = forecast_base.join(roster, how="cross")
-
-    # Filter for only months active
-    forecast_base = forecast_base.filter(
-        (pl.col("start_date_complete") <= pl.col("end_of_month")) &
-        (pl.col("end_date_complete") >= pl.col("start_of_month"))
-    )
-
-    # Add column for year 
-    forecast_base = forecast_base.with_columns(
+def add_year_column(base):
+    return base.with_columns(
         pl.col("start_of_month").dt.year().alias("year")
     )
 
-    # Get prorated portion of month
-    forecast_base = forecast_base.with_columns(
+def get_proration(base):
+    return base.with_columns(
         # Get number of active days
         proration=pl.max_horizontal(
             # Earlier of end date or end of month
             pl.min_horizontal("end_of_month", "end_date_complete").sub(
-                # Later of start date or beginning of month
+                # Subtract l                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        ater of start date or beginning of month
                 pl.max_horizontal("start_of_month", "start_date_complete")
                 # Reduce by 1 so that start day will be counted in active total
                 - pl.duration(days=1)
@@ -78,16 +36,16 @@ def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_fre
         / pl.col('end_of_month').dt.day()
     )
 
-    # Get headcount at end of month
-    forecast_base = forecast_base.with_columns(
+def add_headcount_column(base):
+    return base.with_columns(
         pl.when(
             (pl.col("start_date_complete") <= pl.col("end_of_month")) &
             (pl.col("end_date_complete") > pl.col("end_of_month"))
         ).then(pl.lit(1)).otherwise(pl.lit(0)).alias("headcount")
     )
 
-    # Get headcount change in month
-    forecast_base = forecast_base.with_columns(
+def add_headcount_change_column(base):
+    return base.with_columns(
         (
             # Calculate starts
             pl.when(
@@ -106,32 +64,75 @@ def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_fre
         ).alias("headcount_change")
     )
 
+def calculate_compensation(base):
     # Calculate monthly salary, bonus, and commission
-    forecast_base = forecast_base.with_columns(
+    base = base.with_columns(
         (pl.col("Salary") * pl.col("proration") * pl.col("inflation_factor") / 12).alias("salary_amount"),
         (pl.col("Salary") * pl.col("Bonus") * pl.col("proration") * pl.col("inflation_factor") / 12).alias("bonus_amount"),
         (pl.col("Salary") * pl.col("Commission") * pl.col("proration") * pl.col("inflation_factor") / 12).alias("commission_amount")
     )
-
-    # Calculate compensation
-    forecast_base = forecast_base.with_columns(
+    # Calculate total compensation
+    base = base.with_columns(
         (pl.col("salary_amount") + pl.col("bonus_amount") + pl.col("commission_amount")).alias("compensation"),
     )
 
-    # Calculate YTD Cash Compensation
-    forecast_base = forecast_base.sort(["Employee ID", "year", "start_of_month"]).with_columns(
+    return base
+
+def calculate_ytd_compensation(base):
+    return base.sort(["Employee ID", "year", "start_of_month"]).with_columns(
         pl.col("compensation").cum_sum().over(["Employee ID", "year"]).alias("ytd_compensation")
     )
 
+def filter_active_months(base):
+    return base.filter(
+        (pl.col("start_date_complete") <= pl.col("end_of_month")) &
+        (pl.col("end_date_complete") >= pl.col("start_of_month"))
+    )
+
+def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_freq):
+    """
+    Generate a base forecast with rows for all employees in roster and active months in range with compensation and headcount data.
+
+    Inputs
+    start_date: start date of forecast range,
+    end_date: end date of forecast range,
+    infl_rate: inflation rate,
+    infl_start: start date for inflation increases,
+    infl_freq: number of months between inflation frequency
+
+    Output
+    Polars dataframe
+    """
+    # Generate the month ranges
+    month_ranges = generate_month_ranges(
+        start_date,
+        end_date,
+        infl_rate,
+        infl_start,
+        infl_freq,
+    )
+
+    # Create a DataFrame from the month ranges
+    forecast_base = pl.DataFrame(
+        month_ranges, schema=["start_of_month", "end_of_month", "inflation_factor"]
+    )
+
+    # Create a roster from input file
+    roster = get_roster(ROSTER_PATH)
+
+    # Cross join to roster
+    forecast_base = forecast_base.join(roster, how="cross")
+
+    # Apply transformations
+    forecast_base = filter_active_months(forecast_base)
+    forecast_base = add_year_column(forecast_base)
+    forecast_base = get_proration(forecast_base)
+    forecast_base = add_headcount_column(forecast_base)
+    forecast_base = add_headcount_change_column(forecast_base)
+    forecast_base = calculate_compensation(forecast_base)
+    forecast_base = calculate_ytd_compensation(forecast_base)
 
     return forecast_base
-
-
-# TODO Implement additional calculations
-# Function to add flat monthly fringe amounts (e.g. per head health insurance)
-# Function to add fixed rate of compensation fringe (e.g. 401K match)
-# Function to add capped rate of compensation fringe (e.g. FUTA tax)
-
 
 if __name__ == "__main__":
     forecast_base = generate_forecast_base(
