@@ -16,7 +16,7 @@ def add_year_column(base):
         pl.col("start_of_month").dt.year().alias("year")
     )
 
-def get_proration(base):
+def add_proration(base):
     return base.with_columns(
         # Get number of active days
         proration=pl.max_horizontal(
@@ -126,7 +126,7 @@ def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_fre
     # Apply transformations
     forecast_base = filter_active_months(forecast_base)
     forecast_base = add_year_column(forecast_base)
-    forecast_base = get_proration(forecast_base)
+    forecast_base = add_proration(forecast_base)
     forecast_base = add_headcount_column(forecast_base)
     forecast_base = add_headcount_change_column(forecast_base)
     forecast_base = calculate_compensation(forecast_base)
