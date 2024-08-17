@@ -147,7 +147,8 @@ def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_fre
 
     # Create a DataFrame from the month ranges
     forecast_base = pl.DataFrame(
-        month_ranges, schema=["start_of_month", "end_of_month", "inflation_factor"]
+        month_ranges, schema=["start_of_month", "end_of_month", "inflation_factor"],
+        orient="row"
     )
 
     # Create a roster from input file
@@ -167,9 +168,44 @@ def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_fre
 
     return forecast_base
 
+# TODO Implement function to add constant rate amount projection (e.g. 401K mathch)
+def rate_forecast(forecast, base_column, new_column_name, applied_rate):
+    """
+    Add a new column to a forecast that is an amount calculated as a percentage of an existing column
+
+    Inputs
+    forecast: dataframe - current forecast 
+    base_column: str - column to calculate % of 
+    new_column_name: str - name of new column
+    applied_rate: float - percentage rate to apply
+
+    Output
+    dataframe with new column added
+    """
+
+    # Check if the base_column exists in the forecast
+    if base_column not in forecast.columns:
+        print(f"Column '{base_column}' not found in forecast. Cannot apply rate.")
+    
+    # Check if the base_column is of a numeric type
+    elif not forecast[base_column].dtype.is_numeric():
+        print(f"Column '{base_column}' is not a numeric type. Cannot apply rate.")
+        return forecast
+
+    # Add the new column as a percentage of the base_column
+    else:
+        forecast = forecast.with_columns(
+        (pl.col(base_column) * applied_rate).alias(new_column_name)
+    )
+        
+    return forecast
+
+
+# TODO Implement function to add capped rate amoount projection (e.g. Social Security tax)
+# TODO Implement function to add per head amount projection (e.g. insurance)
 
 if __name__ == "__main__":
-    forecast_base = generate_forecast_base(
+    forecast = generate_forecast_base(
         START_DATE,
         END_DATE,
         INFLATION_RATE,
@@ -177,9 +213,11 @@ if __name__ == "__main__":
         INFLATION_FREQUENCY_IN_MONTHS,
     )
 
+    forecast = rate_forecast(forecast, "Employee ID", "retirement", 0.03)
+
     # with pl.Config(tbl_cols=-1):
     # print(forecast_base)
     # print(forecast_base.filter(pl.col("proration") < 1).filter(pl.col("proration") > 0))
     # print(forecast_base.filter(pl.col("Role ID") < 3))
 
-    forecast_base.write_csv(file="./forecast_base.csv")
+    forecast.write_csv(file="./forecast.csv")
