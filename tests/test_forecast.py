@@ -1,6 +1,6 @@
 import pytest
 import polars as pl
-from datetime import datetime, date
+from datetime import datetime
 
 from src.forecast import (
     add_year_column,

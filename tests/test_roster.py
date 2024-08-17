@@ -1,5 +1,3 @@
-import pytest
-import polars as pl
 from datetime import date
 from src.preparation.roster import get_roster
 
@@ -39,7 +37,7 @@ def test_get_roster_with_invalid_dates(tmp_path):
     assert roster["Role ID"][0] == 1
     assert roster["Employee ID"][0] == "123"
     assert roster["Start Date"][0] == date(2023, 1, 1)
-    assert roster["End Date"][0] == None
+    assert roster["End Date"][0] is None
     assert roster["start_date_complete"][0] == date(2023, 1, 1)
     assert roster["end_date_complete"][0] == date.max
 
@@ -55,8 +53,8 @@ def test_get_roster_with_empty_dates(tmp_path):
     assert roster.shape == (2, 14)
     assert roster["Role ID"][0] == 1
     assert roster["Employee ID"][0] == "123"
-    assert roster["Start Date"][0] == None
-    assert roster["End Date"][0] == None
+    assert roster["Start Date"][0] is None
+    assert roster["End Date"][0] is None
     assert roster["start_date_complete"][0] == date.min
     assert roster["end_date_complete"][0] == date.max
 

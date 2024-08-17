@@ -1,7 +1,6 @@
-import pytest
 import datetime
 
-from src.preparation.months import increase_date, generate_month_ranges
+from src.preparation.months import increase_date
 
 
 class TestIncrease:
