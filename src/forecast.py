@@ -1,3 +1,4 @@
+# forecast.py
 import polars as pl
 from datetime import date
 from preparation.roster import get_roster
@@ -11,10 +12,10 @@ INFLATION_START = date(year=2025, month=1, day=1)
 INFLATION_FREQUENCY_IN_MONTHS = 12
 ROSTER_PATH = "../data/Personnel forecast - Personnel List.csv"
 
+
 def add_year_column(base):
-    return base.with_columns(
-        pl.col("start_of_month").dt.year().alias("year")
-    )
+    return base.with_columns(pl.col("start_of_month").dt.year().alias("year"))
+
 
 def add_proration(base):
     return base.with_columns(
@@ -31,63 +32,95 @@ def add_proration(base):
             pl.duration(days=0),
         )
         # Convert days to integer (24 hrs/day 60 min/hr 60 sec/min 1000 ms/sec)
-        .cast(pl.Float64) // (24 * 60 * 60 * 1_000) 
+        .cast(pl.Float64)
+        // (24 * 60 * 60 * 1_000)
         # Divide by total days in month
-        / pl.col('end_of_month').dt.day()
+        / pl.col("end_of_month").dt.day()
     )
+
 
 def add_headcount_column(base):
     return base.with_columns(
         pl.when(
-            (pl.col("start_date_complete") <= pl.col("end_of_month")) &
-            (pl.col("end_date_complete") > pl.col("end_of_month"))
-        ).then(pl.lit(1)).otherwise(pl.lit(0)).alias("headcount")
+            (pl.col("start_date_complete") <= pl.col("end_of_month"))
+            & (pl.col("end_date_complete") > pl.col("end_of_month"))
+        )
+        .then(pl.lit(1))
+        .otherwise(pl.lit(0))
+        .alias("headcount")
     )
+
 
 def add_headcount_change_column(base):
     return base.with_columns(
         (
             # Calculate starts
             pl.when(
-                (pl.col("start_date_complete") <= pl.col("end_of_month")) &
-                (pl.col("start_date_complete") >= pl.col("start_of_month"))
-            ).then(pl.lit(1)).otherwise(pl.lit(0))
-            
+                (pl.col("start_date_complete") <= pl.col("end_of_month"))
+                & (pl.col("start_date_complete") >= pl.col("start_of_month"))
+            )
+            .then(pl.lit(1))
+            .otherwise(pl.lit(0))
             +
-
             # Calculate ends
             pl.when(
-                (pl.col("end_date_complete") <= pl.col("end_of_month")) &
-                (pl.col("end_date_complete") >= pl.col("start_of_month"))
-            ).then(pl.lit(-1)).otherwise(pl.lit(0))
-            
+                (pl.col("end_date_complete") <= pl.col("end_of_month"))
+                & (pl.col("end_date_complete") >= pl.col("start_of_month"))
+            )
+            .then(pl.lit(-1))
+            .otherwise(pl.lit(0))
         ).alias("headcount_change")
     )
+
 
 def calculate_compensation(base):
     # Calculate monthly salary, bonus, and commission
     base = base.with_columns(
-        (pl.col("Salary") * pl.col("proration") * pl.col("inflation_factor") / 12).alias("salary_amount"),
-        (pl.col("Salary") * pl.col("Bonus") * pl.col("proration") * pl.col("inflation_factor") / 12).alias("bonus_amount"),
-        (pl.col("Salary") * pl.col("Commission") * pl.col("proration") * pl.col("inflation_factor") / 12).alias("commission_amount")
+        (
+            pl.col("Salary") * pl.col("proration") * pl.col("inflation_factor") / 12
+        ).alias("salary_amount"),
+        (
+            pl.col("Salary")
+            * pl.col("Bonus")
+            * pl.col("proration")
+            * pl.col("inflation_factor")
+            / 12
+        ).alias("bonus_amount"),
+        (
+            pl.col("Salary")
+            * pl.col("Commission")
+            * pl.col("proration")
+            * pl.col("inflation_factor")
+            / 12
+        ).alias("commission_amount"),
     )
     # Calculate total compensation
     base = base.with_columns(
-        (pl.col("salary_amount") + pl.col("bonus_amount") + pl.col("commission_amount")).alias("compensation"),
+        (
+            pl.col("salary_amount")
+            + pl.col("bonus_amount")
+            + pl.col("commission_amount")
+        ).alias("compensation"),
     )
 
     return base
 
+
 def calculate_ytd_compensation(base):
     return base.sort(["Employee ID", "year", "start_of_month"]).with_columns(
-        pl.col("compensation").cum_sum().over(["Employee ID", "year"]).alias("ytd_compensation")
+        pl.col("compensation")
+        .cum_sum()
+        .over(["Employee ID", "year"])
+        .alias("ytd_compensation")
     )
+
 
 def filter_active_months(base):
     return base.filter(
-        (pl.col("start_date_complete") <= pl.col("end_of_month")) &
-        (pl.col("end_date_complete") >= pl.col("start_of_month"))
+        (pl.col("start_date_complete") <= pl.col("end_of_month"))
+        & (pl.col("end_date_complete") >= pl.col("start_of_month"))
     )
+
 
 def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_freq):
     """
@@ -134,6 +167,7 @@ def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_fre
 
     return forecast_base
 
+
 if __name__ == "__main__":
     forecast_base = generate_forecast_base(
         START_DATE,
@@ -143,9 +177,9 @@ if __name__ == "__main__":
         INFLATION_FREQUENCY_IN_MONTHS,
     )
 
-    with pl.Config(tbl_cols=-1):
-        print(forecast_base)
-        print(forecast_base.filter(pl.col("proration") < 1).filter(pl.col("proration") > 0))
-        # print(forecast_base.filter(pl.col("Role ID") < 3))
+    # with pl.Config(tbl_cols=-1):
+    # print(forecast_base)
+    # print(forecast_base.filter(pl.col("proration") < 1).filter(pl.col("proration") > 0))
+    # print(forecast_base.filter(pl.col("Role ID") < 3))
 
     forecast_base.write_csv(file="./forecast_base.csv")
