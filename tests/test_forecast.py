@@ -1,5 +1,7 @@
 import pytest
 import polars as pl
+
+from polars.testing import assert_frame_equal
 from datetime import datetime
 
 from src.forecast import (
@@ -10,6 +12,7 @@ from src.forecast import (
     calculate_compensation,
     calculate_ytd_compensation,
     filter_active_months,
+    rate_forecast
 )
 
 
@@ -190,3 +193,35 @@ def test_filter_active_months():
     # One row, originally the second row, should be retained
     assert len(result) == 1
     assert result[0, "inflation_factor"] == 1.03
+
+
+
+def create_test_forecast():
+    """Helper function to create a test forecast DataFrame"""
+    data = {
+        "compensation": [1000.0, 2000.0, 3000.0],
+        "bonus": [100.0, 200.0, 300.0],
+        "headcount": [1, 1, 1],
+    }
+    return pl.DataFrame(data)
+
+def test_rate_forecast_valid_column():
+    forecast = create_test_forecast()
+    result = rate_forecast(forecast, "compensation", "new_rate_column", 0.1)
+    expected = [100.0, 200.0, 300.0]
+    assert result["new_rate_column"].to_list() == expected
+
+def test_rate_forecast_invalid_column():
+    forecast = create_test_forecast()
+    result = rate_forecast(forecast, "invalid_column", "new_rate_column", 0.1)
+    # The original forecast should be returned unchanged
+    assert "new_rate_column" not in result.columns
+    assert_frame_equal(result, forecast)
+
+def test_rate_forecast_non_numeric_column():
+    forecast = create_test_forecast()
+    forecast = forecast.with_columns(pl.col("headcount").cast(pl.Utf8))
+    result = rate_forecast(forecast, "headcount", "new_rate_column", 0.1)
+    # The original forecast should be returned unchanged
+    assert "new_rate_column" not in result.columns
+    assert_frame_equal(result, forecast)

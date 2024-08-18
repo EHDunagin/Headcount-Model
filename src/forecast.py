@@ -168,7 +168,7 @@ def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_fre
 
     return forecast_base
 
-# TODO Implement function to add constant rate amount projection (e.g. 401K mathch)
+# TODO Add test for this function
 def rate_forecast(forecast, base_column, new_column_name, applied_rate):
     """
     Add a new column to a forecast that is an amount calculated as a percentage of an existing column
