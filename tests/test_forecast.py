@@ -12,7 +12,8 @@ from src.forecast import (
     calculate_compensation,
     calculate_ytd_compensation,
     filter_active_months,
-    rate_forecast
+    rate_forecast,
+    capped_rate_forecast
 )
 
 
@@ -200,6 +201,7 @@ def create_test_forecast():
     """Helper function to create a test forecast DataFrame"""
     data = {
         "compensation": [1000.0, 2000.0, 3000.0],
+        "ytd_compensation": [150000.0, 169000.0, 175000.0],
         "bonus": [100.0, 200.0, 300.0],
         "headcount": [1, 1, 1],
     }
@@ -225,3 +227,17 @@ def test_rate_forecast_non_numeric_column():
     # The original forecast should be returned unchanged
     assert "new_rate_column" not in result.columns
     assert_frame_equal(result, forecast)
+
+def test_capped_rate_forecast():
+    forecast = create_test_forecast()
+    result = capped_rate_forecast(
+        forecast, 
+        base_column="compensation", 
+        new_column_name="ss_tax", 
+        applied_rate=0.062, 
+        cap_base_column="ytd_compensation", 
+        cap_amount=168600
+    )
+    
+    expected = [62.0, 99.2, 0.0]
+    assert result["ss_tax"].to_list() == expected

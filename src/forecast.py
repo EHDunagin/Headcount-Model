@@ -168,7 +168,6 @@ def generate_forecast_base(start_date, end_date, infl_rate, infl_start, infl_fre
 
     return forecast_base
 
-# TODO Add test for this function
 def rate_forecast(forecast, base_column, new_column_name, applied_rate):
     """
     Add a new column to a forecast that is an amount calculated as a percentage of an existing column
@@ -202,6 +201,46 @@ def rate_forecast(forecast, base_column, new_column_name, applied_rate):
 
 
 # TODO Implement function to add capped rate amoount projection (e.g. Social Security tax)
+import polars as pl
+
+def capped_rate_forecast(forecast, base_column, new_column_name, applied_rate, cap_base_column, cap_amount):
+    """
+    Add a new column to a forecast that is an amount calculated as a percentage of an existing column,
+    with a cap on the base amount.
+
+    Inputs
+    forecast: dataframe - current forecast 
+    base_column: str - column to calculate % of
+    new_column_name: str - name of new column
+    applied_rate: float - percentage rate to apply
+    cap_base_column: str - column used to determine the cap
+    cap_amount: float - maximum amount of cap_base_column to apply the rate to
+
+    Output
+    DataFrame with the new column added.
+    """
+
+    # Ensure base_column and cap_base_column exist and are numeric
+    if base_column not in forecast.columns or cap_base_column not in forecast.columns:
+        print(f"Forecast could not be applied: column '{base_column}' or '{cap_base_column}' not found.")
+        return forecast
+    
+    if not forecast[base_column].dtype.is_numeric() or not forecast[cap_base_column].dtype.is_numeric():
+        print(f"Forecast could not be applied: column '{base_column}' or '{cap_base_column}' is not numeric.")
+        return forecast
+
+    # Compute the capped rate
+    capped_rate_expr = pl.when(pl.col(cap_base_column) <= cap_amount)
+    capped_rate_expr = capped_rate_expr.then(pl.col(base_column) * applied_rate)
+    capped_rate_expr = capped_rate_expr.when(pl.col(cap_base_column) - pl.col(base_column) >= cap_amount)
+    capped_rate_expr = capped_rate_expr.then(pl.lit(0))
+    capped_rate_expr = capped_rate_expr.otherwise(
+        (cap_amount - pl.col(cap_base_column) + pl.col(base_column)).clip(lower_bound=0) * applied_rate
+    ).alias(new_column_name)
+
+    return forecast.with_columns(capped_rate_expr)
+
+
 # TODO Implement function to add per head amount projection (e.g. insurance)
 
 if __name__ == "__main__":
@@ -213,7 +252,15 @@ if __name__ == "__main__":
         INFLATION_FREQUENCY_IN_MONTHS,
     )
 
-    forecast = rate_forecast(forecast, "Employee ID", "retirement", 0.03)
+    forecast = rate_forecast(forecast, "compensation", "retirement", 0.03)
+    forecast = capped_rate_forecast(forecast=forecast, 
+        base_column="compensation", 
+        new_column_name="ss_tax", 
+        applied_rate=0.062,
+        cap_base_column="ytd_compensation",
+        cap_amount=168600
+    )
+
 
     # with pl.Config(tbl_cols=-1):
     # print(forecast_base)
