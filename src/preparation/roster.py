@@ -1,6 +1,7 @@
 import polars as pl
 from datetime import date
 
+
 def get_roster(data_path):
     """
     Reads in an input headcount roster from a .csv file fills missing start and end dates.

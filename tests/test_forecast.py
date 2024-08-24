@@ -13,7 +13,8 @@ from src.forecast import (
     calculate_ytd_compensation,
     filter_active_months,
     rate_forecast,
-    capped_rate_forecast
+    capped_rate_forecast,
+    per_head_forecast,
 )
 
 
@@ -196,7 +197,6 @@ def test_filter_active_months():
     assert result[0, "inflation_factor"] == 1.03
 
 
-
 def create_test_forecast():
     """Helper function to create a test forecast DataFrame"""
     data = {
@@ -207,11 +207,13 @@ def create_test_forecast():
     }
     return pl.DataFrame(data)
 
+
 def test_rate_forecast_valid_column():
     forecast = create_test_forecast()
     result = rate_forecast(forecast, "compensation", "new_rate_column", 0.1)
     expected = [100.0, 200.0, 300.0]
     assert result["new_rate_column"].to_list() == expected
+
 
 def test_rate_forecast_invalid_column():
     forecast = create_test_forecast()
@@ -219,6 +221,7 @@ def test_rate_forecast_invalid_column():
     # The original forecast should be returned unchanged
     assert "new_rate_column" not in result.columns
     assert_frame_equal(result, forecast)
+
 
 def test_rate_forecast_non_numeric_column():
     forecast = create_test_forecast()
@@ -228,16 +231,100 @@ def test_rate_forecast_non_numeric_column():
     assert "new_rate_column" not in result.columns
     assert_frame_equal(result, forecast)
 
+
 def test_capped_rate_forecast():
     forecast = create_test_forecast()
     result = capped_rate_forecast(
-        forecast, 
-        base_column="compensation", 
-        new_column_name="ss_tax", 
-        applied_rate=0.062, 
-        cap_base_column="ytd_compensation", 
-        cap_amount=168600
+        forecast,
+        base_column="compensation",
+        new_column_name="ss_tax",
+        applied_rate=0.062,
+        cap_base_column="ytd_compensation",
+        cap_amount=168600,
     )
-    
+
     expected = [62.0, 99.2, 0.0]
     assert result["ss_tax"].to_list() == expected
+
+def test_capped_rate_forecast_non_numeric_column():
+    forecast = create_test_forecast()
+    forecast = forecast.with_columns(pl.col("compensation").cast(pl.Utf8))
+
+    with pytest.raises(ValueError):
+        result = capped_rate_forecast(
+            forecast,
+            base_column="compensation",
+            new_column_name="ss_tax",
+            applied_rate=0.062,
+            cap_base_column="ytd_compensation",
+            cap_amount=168600,
+        )
+
+def test_per_head_forecast_normal_case():
+    # Test the normal case with valid inputs
+    df = pl.DataFrame({
+        "Employee ID": ["1", "2"],
+        "start_of_month": [pl.datetime(2024, 1, 1), pl.datetime(2024, 1, 1)],
+        "proration": [0.5, 1.0],
+        "inflation_factor": [1.02, 1.02]
+    })
+
+    result = per_head_forecast(df, "per_head_amount", 1000)
+    expected = pl.Series([0.0, 1020.0])
+    
+    assert result["per_head_amount"].series_equal(expected)
+
+
+# def test_per_head_forecast_missing_columns():
+#     # Test when required columns are missing
+#     df = pl.DataFrame({
+#         "Employee ID": [1],
+#         "start_of_month": [pl.datetime(2024, 1, 1)]
+#     })
+
+#     with pytest.raises(ValueError, match="column 'proration' or 'inflation_factor' not found or not numeric"):
+#         per_head_forecast(df, "per_head_amount", 1000)
+
+
+# def test_per_head_forecast_non_numeric_columns():
+#     # Test when proration or inflation_factor are non-numeric
+#     df = pl.DataFrame({
+#         "Employee ID": [1],
+#         "start_of_month": [pl.datetime(2024, 1, 1)],
+#         "proration": ["0.5"],
+#         "inflation_factor": ["1.02"]
+#     })
+
+#     with pytest.raises(ValueError, match="column 'proration' or 'inflation_factor' not found or not numeric"):
+#         per_head_forecast(df, "per_head_amount", 1000)
+
+
+# def test_per_head_forecast_multiple_roles():
+#     # Test with an employee having multiple roles in the same month
+#     df = pl.DataFrame({
+#         "Employee ID": [1, 1, 2],
+#         "start_of_month": [pl.datetime(2024, 1, 1), pl.datetime(2024, 1, 1), pl.datetime(2024, 1, 1)],
+#         "proration": [0.5, 1.0, 0.8],
+#         "inflation_factor": [1.02, 1.02, 1.03]
+#     })
+
+#     result = per_head_forecast(df, "per_head_amount", 1000)
+#     expected = pl.Series([0.0, 1020.0, 1030.0])
+    
+#     assert result["per_head_amount"].series_equal(expected)
+
+# def test_per_head_forecast_no_proration():
+#     # Test when proration is zero
+#     df = pl.DataFrame({
+#         "Employee ID": [1],
+#         "start_of_month": [pl.datetime(2024, 1, 1)],
+#         "proration": [0],
+#         "inflation_factor": [1.02]
+#     })
+
+#     result = per_head_forecast(df, "per_head_amount", 1000)
+#     expected = pl.Series([0.0])
+    
+#     assert result["per_head_amount"].series_equal(expected)
+
+
