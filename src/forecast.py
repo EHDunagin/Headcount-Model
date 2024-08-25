@@ -1,16 +1,10 @@
 # forecast.py
 import polars as pl
-from datetime import date
+from datetime import date, datetime
 from preparation.roster import get_roster
 from preparation.months import generate_month_ranges
 
-# TODO Replace with input prompts
-START_DATE = date(year=2024, month=1, day=22)
-END_DATE = date(year=2028, month=12, day=7)
-INFLATION_RATE = 0.03
-INFLATION_START = date(year=2025, month=1, day=1)
-INFLATION_FREQUENCY_IN_MONTHS = 12
-ROSTER_PATH = "../data/Personnel forecast - Personnel List.csv"
+
 
 
 def add_year_column(base):
@@ -296,6 +290,25 @@ def per_head_forecast(
 
 
 if __name__ == "__main__":
+
+    # Get user input for each variable
+    START_DATE = datetime.strptime(input("Enter the start date (YYYY-MM-DD): "), "%Y-%m-%d").date()
+    END_DATE = datetime.strptime(input("Enter the end date (YYYY-MM-DD): "), "%Y-%m-%d").date()
+    INFLATION_RATE = float(input("Enter the inflation rate (e.g., 0.03 for 3%): "))
+    INFLATION_START = datetime.strptime(input("Enter the inflation start date (YYYY-MM-DD): "), "%Y-%m-%d").date()
+    INFLATION_FREQUENCY_IN_MONTHS = int(input("Enter the inflation frequency in months: "))
+
+    # Open a file dialog to select the roster CSV file
+    from tkinter.filedialog import askopenfilename
+    ROSTER_PATH = askopenfilename(title="Select the roster CSV file", filetypes=[("CSV files", "*.csv")])
+
+    print(f"START_DATE: {START_DATE}")
+    print(f"END_DATE: {END_DATE}")
+    print(f"INFLATION_RATE: {INFLATION_RATE}")
+    print(f"INFLATION_START: {INFLATION_START}")
+    print(f"INFLATION_FREQUENCY_IN_MONTHS: {INFLATION_FREQUENCY_IN_MONTHS}")
+    print(f"ROSTER_PATH: {ROSTER_PATH}")
+
     forecast = generate_forecast_base(
         START_DATE,
         END_DATE,
