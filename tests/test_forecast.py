@@ -1,7 +1,7 @@
 import pytest
 import polars as pl
 
-from polars.testing import assert_frame_equal
+from polars.testing import assert_frame_equal, assert_series_equal
 from datetime import datetime
 
 from src.forecast import (
@@ -263,68 +263,71 @@ def test_capped_rate_forecast_non_numeric_column():
 def test_per_head_forecast_normal_case():
     # Test the normal case with valid inputs
     df = pl.DataFrame({
-        "Employee ID": ["1", "2"],
-        "start_of_month": [pl.datetime(2024, 1, 1), pl.datetime(2024, 1, 1)],
+        "Employee ID": [1, 1],
+        "start_of_month": [
+            datetime(2024, 1, 1), 
+            datetime(2024, 1, 1)
+        ],
         "proration": [0.5, 1.0],
         "inflation_factor": [1.02, 1.02]
     })
 
     result = per_head_forecast(df, "per_head_amount", 1000)
-    expected = pl.Series([0.0, 1020.0])
+    expected = pl.Series(name="per_head_amount", values=[0.0, 1020.0])
+
+    assert_series_equal(result["per_head_amount"], expected)
+
+
+def test_per_head_forecast_missing_columns():
+    # Test when required columns are missing
+    df = pl.DataFrame({
+        "Employee ID": [1],
+        "start_of_month": [pl.datetime(2024, 1, 1)]
+    })
+
+    with pytest.raises(ValueError, match="column 'proration' or 'inflation_factor' not found or not numeric"):
+        per_head_forecast(df, "per_head_amount", 1000)
+
+
+def test_per_head_forecast_non_numeric_columns():
+    # Test when proration or inflation_factor are non-numeric
+    df = pl.DataFrame({
+        "Employee ID": [1],
+        "start_of_month": [datetime(2024, 1, 1)],
+        "proration": ["0.5"],
+        "inflation_factor": ["1.02"]
+    })
+
+    with pytest.raises(ValueError, match="column 'proration' or 'inflation_factor' not found or not numeric"):
+        per_head_forecast(df, "per_head_amount", 1000)
+
+
+def test_per_head_forecast_multiple_roles():
+    # Test with an employee having multiple roles in the same month
+    df = pl.DataFrame({
+        "Employee ID": [1, 1, 2],
+        "start_of_month": [datetime(2024, 1, 1), datetime(2024, 1, 1), datetime(2024, 1, 1)],
+        "proration": [0.5, 1.0, 0.8],
+        "inflation_factor": [1.02, 1.02, 1.02]
+    })
+
+    result = per_head_forecast(df, "per_head_amount", 1000)
+    expected = pl.Series(name="per_head_amount", values=[0.0, 1020.0, 1020.0])
     
-    assert result["per_head_amount"].series_equal(expected)
+    assert_series_equal(result["per_head_amount"], expected)
 
+def test_per_head_forecast_no_proration():
+    # Test when proration is zero
+    df = pl.DataFrame({
+        "Employee ID": [1],
+        "start_of_month": [datetime(2024, 1, 1)],
+        "proration": [0],
+        "inflation_factor": [1.02]
+    })
 
-# def test_per_head_forecast_missing_columns():
-#     # Test when required columns are missing
-#     df = pl.DataFrame({
-#         "Employee ID": [1],
-#         "start_of_month": [pl.datetime(2024, 1, 1)]
-#     })
-
-#     with pytest.raises(ValueError, match="column 'proration' or 'inflation_factor' not found or not numeric"):
-#         per_head_forecast(df, "per_head_amount", 1000)
-
-
-# def test_per_head_forecast_non_numeric_columns():
-#     # Test when proration or inflation_factor are non-numeric
-#     df = pl.DataFrame({
-#         "Employee ID": [1],
-#         "start_of_month": [pl.datetime(2024, 1, 1)],
-#         "proration": ["0.5"],
-#         "inflation_factor": ["1.02"]
-#     })
-
-#     with pytest.raises(ValueError, match="column 'proration' or 'inflation_factor' not found or not numeric"):
-#         per_head_forecast(df, "per_head_amount", 1000)
-
-
-# def test_per_head_forecast_multiple_roles():
-#     # Test with an employee having multiple roles in the same month
-#     df = pl.DataFrame({
-#         "Employee ID": [1, 1, 2],
-#         "start_of_month": [pl.datetime(2024, 1, 1), pl.datetime(2024, 1, 1), pl.datetime(2024, 1, 1)],
-#         "proration": [0.5, 1.0, 0.8],
-#         "inflation_factor": [1.02, 1.02, 1.03]
-#     })
-
-#     result = per_head_forecast(df, "per_head_amount", 1000)
-#     expected = pl.Series([0.0, 1020.0, 1030.0])
+    result = per_head_forecast(df, "per_head_amount", 1000)
+    expected = pl.Series(name="per_head_amount", values=[0.0])
     
-#     assert result["per_head_amount"].series_equal(expected)
-
-# def test_per_head_forecast_no_proration():
-#     # Test when proration is zero
-#     df = pl.DataFrame({
-#         "Employee ID": [1],
-#         "start_of_month": [pl.datetime(2024, 1, 1)],
-#         "proration": [0],
-#         "inflation_factor": [1.02]
-#     })
-
-#     result = per_head_forecast(df, "per_head_amount", 1000)
-#     expected = pl.Series([0.0])
-    
-#     assert result["per_head_amount"].series_equal(expected)
+    assert_series_equal(result["per_head_amount"], expected)
 
 
