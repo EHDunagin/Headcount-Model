@@ -4,7 +4,7 @@ import polars as pl
 from polars.testing import assert_frame_equal, assert_series_equal
 from datetime import datetime
 
-from src.forecast import (
+from base import (
     add_year_column,
     add_proration,
     add_headcount_column,
@@ -12,6 +12,10 @@ from src.forecast import (
     calculate_compensation,
     calculate_ytd_compensation,
     filter_active_months,
+    
+)
+
+from calculations import (
     rate_forecast,
     capped_rate_forecast,
     per_head_forecast,

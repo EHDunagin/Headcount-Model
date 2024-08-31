@@ -1,14 +1,10 @@
-import sys
-import os
 import polars as pl
 import pytest
 from datetime import date
 
-# Add the src directory to the sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 # Import the function to be tested
-from forecast import generate_forecast_base
+from base import generate_forecast_base
 
 
 # Mock Data for Testing
@@ -47,8 +43,8 @@ def mock_generate_month_ranges(start_date, end_date, infl_rate, infl_start, infl
 # Integration Test for generate_forecast_base
 def test_generate_forecast_base(monkeypatch):
     # Use monkeypatch to replace the actual get_roster and generate_month_ranges functions with mocks
-    monkeypatch.setattr("forecast.get_roster", mock_get_roster)
-    monkeypatch.setattr("forecast.generate_month_ranges", mock_generate_month_ranges)
+    monkeypatch.setattr("base.get_roster", mock_get_roster)
+    monkeypatch.setattr("base.generate_month_ranges", mock_generate_month_ranges)
 
     # Define inputs
     start_date = date(2024, 1, 1)
@@ -59,7 +55,7 @@ def test_generate_forecast_base(monkeypatch):
 
     # Generate the forecast base
     forecast_base = generate_forecast_base(
-        start_date, end_date, infl_rate, infl_start, infl_freq
+        "fake_roster_path.csv", start_date, end_date, infl_rate, infl_start, infl_freq
     )
 
     # Check if the output DataFrame has the expected shape and columns

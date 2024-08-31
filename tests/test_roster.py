@@ -1,5 +1,5 @@
 from datetime import date
-from src.preparation.roster import get_roster
+from utilities import get_roster
 
 
 def create_temp_csv(tmp_path, content):

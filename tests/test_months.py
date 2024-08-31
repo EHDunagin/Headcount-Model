@@ -1,6 +1,6 @@
 import datetime
 
-from src.preparation.months import increase_date
+from utilities import increase_date
 
 
 class TestIncrease:
