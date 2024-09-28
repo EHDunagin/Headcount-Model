@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import filedialog
 from datetime import datetime
 
+
 def prompt_input_file():
     """
     Prompt the user to select a file using tkinter filedialog.
@@ -11,12 +12,14 @@ def prompt_input_file():
     """
     root = tk.Tk()
     root.withdraw()  # Hide the main tkinter window
-    file_path = filedialog.askopenfilename(title="Select Input CSV File",
-                                           filetypes=[("CSV files", "*.csv")])
+    file_path = filedialog.askopenfilename(
+        title="Select Input CSV File", filetypes=[("CSV files", "*.csv")]
+    )
     if not file_path:
         print("No file selected, please try again.")
         return prompt_input_file()  # Retry if no file selected
     return file_path
+
 
 def prompt_export_path():
     """
@@ -31,6 +34,7 @@ def prompt_export_path():
         return prompt_export_path()  # Retry if no directory selected
     return directory_path
 
+
 def prompt_date(msg):
     """
     Prompt the user to input a date in YYYY-MM-DD format.
@@ -42,7 +46,8 @@ def prompt_date(msg):
         return start_date
     except ValueError:
         print("Invalid date format. Please enter the date in YYYY-MM-DD format.")
-        return prompt_date()  # Retry if invalid date
+        return prompt_date(msg)  # Retry if invalid date
+
 
 def prompt_positive_integer(prompt_message):
     """
@@ -58,6 +63,7 @@ def prompt_positive_integer(prompt_message):
         print("Invalid input. Please enter a valid positive integer.")
         return prompt_positive_integer(prompt_message)  # Retry if invalid input
 
+
 def prompt_float(prompt_message):
     """
     Generic prompt for a float input.
@@ -70,12 +76,15 @@ def prompt_float(prompt_message):
         print("Invalid input. Please enter a valid float.")
         return prompt_float(prompt_message)  # Retry if invalid input
 
+
 def prompt_string(prompt_message, max_length=50):
     """
     Generic prompt for a string input with a maximum length of 50 characters.
     """
     user_input = input(prompt_message).strip()
     if len(user_input) > max_length:
-        print(f"Input too long. Please enter a string with a maximum of {max_length} characters.")
+        print(
+            f"Input too long. Please enter a string with a maximum of {max_length} characters."
+        )
         return prompt_string(prompt_message, max_length)  # Retry if too long
     return user_input

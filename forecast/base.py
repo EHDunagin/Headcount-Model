@@ -1,10 +1,12 @@
 # base.py
 import polars as pl
 from datetime import datetime
-from utilities import get_roster, generate_month_ranges
+from .utilities import get_roster, generate_month_ranges
+
 
 def add_year_column(base):
     return base.with_columns(pl.col("start_of_month").dt.year().alias("year"))
+
 
 def add_proration(base):
     return base.with_columns(
@@ -27,6 +29,7 @@ def add_proration(base):
         / pl.col("end_of_month").dt.day()
     )
 
+
 def add_headcount_column(base):
     return base.with_columns(
         pl.when(
@@ -37,6 +40,7 @@ def add_headcount_column(base):
         .otherwise(pl.lit(0))
         .alias("headcount")
     )
+
 
 def add_headcount_change_column(base):
     return base.with_columns(
@@ -58,6 +62,7 @@ def add_headcount_change_column(base):
             .otherwise(pl.lit(0))
         ).alias("headcount_change")
     )
+
 
 def calculate_compensation(base):
     # Calculate monthly salary, bonus, and commission
@@ -91,6 +96,7 @@ def calculate_compensation(base):
 
     return base
 
+
 def calculate_ytd_compensation(base):
     return base.sort(["Employee ID", "year", "start_of_month"]).with_columns(
         pl.col("compensation")
@@ -99,13 +105,17 @@ def calculate_ytd_compensation(base):
         .alias("ytd_compensation")
     )
 
+
 def filter_active_months(base):
     return base.filter(
         (pl.col("start_date_complete") <= pl.col("end_of_month"))
         & (pl.col("end_date_complete") >= pl.col("start_of_month"))
     )
 
-def generate_forecast_base(roster_path, start_date, end_date, infl_rate, infl_start, infl_freq):
+
+def generate_forecast_base(
+    roster_path, start_date, end_date, infl_rate, infl_start, infl_freq
+):
     """
     Generate a base forecast with rows for all employees in roster and active months in range with compensation and headcount data.
 
@@ -152,6 +162,7 @@ def generate_forecast_base(roster_path, start_date, end_date, infl_rate, infl_st
 
     return forecast_base
 
+
 # if __name__ == "__main__":
 
 #     # Get user input for each variable
@@ -175,4 +186,3 @@ def generate_forecast_base(roster_path, start_date, end_date, infl_rate, infl_st
 #     )
 
 #     forecast.write_csv(file=f"./{datetime.today().strftime('%y-%m-%d')}_forecast.csv")
-

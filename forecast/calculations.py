@@ -1,5 +1,6 @@
 import polars as pl
 
+
 def rate_forecast(forecast, base_column, new_column_name, applied_rate):
     """
     Add a new column to a forecast that is an amount calculated as a percentage of an existing column
@@ -79,9 +80,8 @@ def capped_rate_forecast(
 
     return forecast.with_columns(capped_rate_expr)
 
-def per_head_forecast(
-    forecast, new_column_name, amount
-):
+
+def per_head_forecast(forecast, new_column_name, amount):
     """
     Add a new column to a forecast that is a flat amount adjusted for inflation for any month an employee is active
 
@@ -101,8 +101,10 @@ def per_head_forecast(
         or not forecast["proration"].dtype.is_numeric()
         or not forecast["inflation_factor"].dtype.is_numeric()
     ):
-        raise ValueError("Forecast could not be applied: column 'proration' or 'inflation_factor' not found or not numeric.")
-    
+        raise ValueError(
+            "Forecast could not be applied: column 'proration' or 'inflation_factor' not found or not numeric."
+        )
+
     # Find the maximum proration per Employee ID and start_of_month
     max_prorations = forecast.group_by(["Employee ID", "start_of_month"]).agg(
         pl.col("proration").max().alias("max_proration")
@@ -113,7 +115,9 @@ def per_head_forecast(
 
     # Apply the amount only to the rows with the maximum proration to avoid duplication when an employee changes roles mid month
     forecast = forecast.with_columns(
-        pl.when((pl.col("proration") == pl.col("max_proration")) & (pl.col("proration") > 0))
+        pl.when(
+            (pl.col("proration") == pl.col("max_proration")) & (pl.col("proration") > 0)
+        )
         .then(pl.col("inflation_factor") * amount)
         .otherwise(0)
         .alias(new_column_name)
@@ -123,4 +127,3 @@ def per_head_forecast(
     forecast = forecast.drop("max_proration")
 
     return forecast
-
