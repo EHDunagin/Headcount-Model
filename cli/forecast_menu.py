@@ -140,4 +140,6 @@ def print_cols(forecast):
     print("Column", " " * 50, "Dtype")
     print("-" * 64)
     for column in cols:
-        print(column[0], " " * (62 - len(str(column[0])) - len(str(column[1]))), column[1])
+        print(
+            column[0], " " * (62 - len(str(column[0])) - len(str(column[1]))), column[1]
+        )

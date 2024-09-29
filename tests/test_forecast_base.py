@@ -4,7 +4,7 @@ from datetime import date
 
 
 # Import the function to be tested
-from base import generate_forecast_base
+from forecast.base import generate_forecast_base
 
 
 # Mock Data for Testing
@@ -43,8 +43,10 @@ def mock_generate_month_ranges(start_date, end_date, infl_rate, infl_start, infl
 # Integration Test for generate_forecast_base
 def test_generate_forecast_base(monkeypatch):
     # Use monkeypatch to replace the actual get_roster and generate_month_ranges functions with mocks
-    monkeypatch.setattr("base.get_roster", mock_get_roster)
-    monkeypatch.setattr("base.generate_month_ranges", mock_generate_month_ranges)
+    monkeypatch.setattr("forecast.base.get_roster", mock_get_roster)
+    monkeypatch.setattr(
+        "forecast.base.generate_month_ranges", mock_generate_month_ranges
+    )
 
     # Define inputs
     start_date = date(2024, 1, 1)

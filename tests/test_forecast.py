@@ -255,7 +255,7 @@ def test_capped_rate_forecast_non_numeric_column():
     forecast = forecast.with_columns(pl.col("compensation").cast(pl.Utf8))
 
     with pytest.raises(ValueError):
-        result = capped_rate_forecast(
+        capped_rate_forecast(
             forecast,
             base_column="compensation",
             new_column_name="ss_tax",

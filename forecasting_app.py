@@ -17,14 +17,14 @@ def main():
 
         elif choice == "add_forecast":
             # Ensure a forecast exists before proceeding
-            if not (forecast is None):
+            if forecast is not None:
                 forecast = forecast_menu.add_forecast_options(forecast)
             else:
                 print("\nPlease create a forecast base first.\n")
 
         elif choice == "export_forecast":
             # Ensure a forecast exists before proceeding
-            if not (forecast is None):
+            if forecast is not None:
                 export_path = forecast_menu.export_forecast(forecast)
                 print(f"Forecast exported to {export_path}")
             else:
