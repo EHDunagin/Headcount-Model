@@ -17,11 +17,11 @@ def rate_forecast(forecast, base_column, new_column_name, applied_rate):
 
     # Check if the base_column exists in the forecast
     if base_column not in forecast.columns:
-        print(f"Column '{base_column}' not found in forecast. Cannot apply rate.")
+        print(f"\nColumn '{base_column}' not found in forecast. Cannot apply rate.\n")
 
     # Check if the base_column is of a numeric type
     elif not forecast[base_column].dtype.is_numeric():
-        print(f"Column '{base_column}' is not a numeric type. Cannot apply rate.")
+        print(f"\nColumn '{base_column}' is not a numeric type. Cannot apply rate.\n")
         return forecast
 
     # Add the new column as a percentage of the base_column
@@ -55,7 +55,7 @@ def capped_rate_forecast(
     # Ensure base_column and cap_base_column exist and are numeric
     if base_column not in forecast.columns or cap_base_column not in forecast.columns:
         raise ValueError(
-            f"Forecast could not be applied: column '{base_column}' or '{cap_base_column}' not found."
+            f"\nForecast could not be applied: column '{base_column}' or '{cap_base_column}' not found.\n"
         )
 
     if (
@@ -63,7 +63,7 @@ def capped_rate_forecast(
         or not forecast[cap_base_column].dtype.is_numeric()
     ):
         raise ValueError(
-            f"Forecast could not be applied: column '{base_column}' or '{cap_base_column}' is not numeric."
+            f"\nForecast could not be applied: column '{base_column}' or '{cap_base_column}' is not numeric.\n"
         )
 
     # Compute the capped rate
@@ -102,7 +102,7 @@ def per_head_forecast(forecast, new_column_name, amount):
         or not forecast["inflation_factor"].dtype.is_numeric()
     ):
         raise ValueError(
-            "Forecast could not be applied: column 'proration' or 'inflation_factor' not found or not numeric."
+            "\nForecast could not be applied: column 'proration' or 'inflation_factor' not found or not numeric.\n"
         )
 
     # Find the maximum proration per Employee ID and start_of_month
