@@ -7,7 +7,7 @@ from forecast.utilities import RosterFileError
 from forecast.calculations import rate_forecast, capped_rate_forecast, per_head_forecast
 
 
-def create_forecast_base():
+def create_forecast_base(action_register):
     # Prompt user for inputs
     print("Please select a roster file.")
 
@@ -59,10 +59,19 @@ def create_forecast_base():
             f"Unexpected error while creating forecast base: \n\n {e}\n\nPlease check your inputs and try again.\n"
         )
 
+    action_register["base_inputs"] = {
+        "roster_file": roster_file,
+        "start_date": start_date.strftime("%Y-%m-%d"),
+        "end_date": end_date.strftime("%Y-%m-%d"),
+        "inflation_rate": inflation_rate,
+        "inflation_start": inflation_start.strftime("%Y-%m-%d"),
+        "inflation_freq": inflation_freq,
+    }
+
     return forecast_base
 
 
-def add_forecast_options(forecast):
+def add_forecast_options(forecast, action_register):
     print("1. Add Flat Rate Forecast")
     print("2. Add Capped Rate Forecast")
     print("3. Add Per Head Forecast")
@@ -78,6 +87,16 @@ def add_forecast_options(forecast):
         )
         # Call function to add flat rate forecast
         forecast = rate_forecast(forecast, base_column, new_column_name, applied_rate)
+
+        # Add step taken to action register
+        action_register["added_columns"].append(
+            {
+                "type": "flat_rate",
+                "base_column": base_column,
+                "new_column_name": new_column_name,
+                "applied_rate": applied_rate,
+            }
+        )
 
     elif choice == "2":
         print_cols(forecast)
@@ -103,6 +122,18 @@ def add_forecast_options(forecast):
             cap_amount,
         )
 
+        # Add step taken to action register
+        action_register["added_columns"].append(
+            {
+                "type": "capped_rate",
+                "base_column": base_column,
+                "new_column_name": new_column_name,
+                "applied_rate": applied_rate,
+                "cap_base_column": cap_base_column,
+                "cap_amount": cap_amount,
+            }
+        )
+
     elif choice == "3":
         print_cols(forecast)
         # Get inputs
@@ -110,6 +141,15 @@ def add_forecast_options(forecast):
         amount = input_handlers.prompt_float("Enter per head amount: ")
         # Call function to add per head forecast
         forecast = per_head_forecast(forecast, new_column_name, amount)
+
+        # Add step taken to action register
+        action_register["added_columns"].append(
+            {
+                "type": "per_head",
+                "new_column_name": new_column_name,
+                "amount": amount,
+            }
+        )
 
     else:
         print("Invalid choice, returning to menu.")

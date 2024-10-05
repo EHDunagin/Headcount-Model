@@ -5,20 +5,26 @@ import cli.forecast_menu as forecast_menu
 
 
 def main():
-    # Initialize an empty forecast (None initially)
+    # Initialize an empty forecast (None initially) and action register
     forecast = None
+    action_register = None
     while True:
         # Display the main menu and capture the user's choice
         choice = main_menu.display_main_menu()
 
         if choice == "create_forecast":
+            # Set new action register to clear any old steps
+            action_register = {
+                "base_inputs": {},
+                "added_columns": [],
+            }
             # Create a new forecast base
-            forecast = forecast_menu.create_forecast_base()
+            forecast = forecast_menu.create_forecast_base(action_register)
 
         elif choice == "add_forecast":
             # Ensure a forecast exists before proceeding
             if forecast is not None:
-                forecast = forecast_menu.add_forecast_options(forecast)
+                forecast = forecast_menu.add_forecast_options(forecast, action_register)
             else:
                 print("\nPlease create a forecast base first.\n")
 
@@ -29,6 +35,17 @@ def main():
                 print(f"Forecast exported to {export_path}")
             else:
                 print("\nPlease create a forecast base first.\n")
+
+        elif choice == "export_steps":
+            # Ensure an action register exists before proceeding
+            if action_register is not None:
+                # TODO Implement and call function to export actions applied
+                # TODO Replace print statement with function call
+                export_path = "TODO REPLACE THIS!!!"
+                print(action_register)
+                print(f"Steps exported to {export_path}")
+            else:
+                print("\nPlease create a forecast first.\n")
 
         elif choice == "exit":
             print("Exiting program...")
