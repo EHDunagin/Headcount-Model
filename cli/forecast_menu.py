@@ -14,11 +14,11 @@ def create_forecast_base(action_register):
     roster_file = input_handlers.prompt_input_file()
     start_date = input_handlers.prompt_date("Enter the start date (YYYY-MM-DD): ")
     end_date = input_handlers.prompt_date("Enter the end date (YYYY-MM-DD): ")
-    inflation_rate = input_handlers.prompt_float(
-        "Enter the inflation rate (e.g., 0.03 for 3%): "
-    )
     inflation_start = input_handlers.prompt_date(
         "Enter the inflation start date (YYYY-MM-DD): "
+    )
+    inflation_rate = input_handlers.prompt_float(
+        "Enter the inflation rate (e.g., 0.03 for 3%): "
     )
     inflation_freq = input_handlers.prompt_positive_integer(
         "Enter the inflation frequency in months: "
@@ -158,7 +158,10 @@ def add_forecast_options(forecast, action_register):
 
 
 def export_forecast(forecast):
-    # Export the forecast to a selected file
+    """
+    Export the forecast to a selected location
+    """
+    print("\nPlease select directory to create forecast. \n")
     export_path = (
         input_handlers.prompt_export_path()
         + "/"

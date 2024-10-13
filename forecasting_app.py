@@ -2,6 +2,7 @@
 
 import cli.main_menu as main_menu
 import cli.forecast_menu as forecast_menu
+import cli.register_menu as register_menu
 
 
 def main():
@@ -27,6 +28,9 @@ def main():
                 forecast = forecast_menu.add_forecast_options(forecast, action_register)
             else:
                 print("\nPlease create a forecast base first.\n")
+        
+        elif choice == "forecast_from_file":
+            forecast = register_menu.forecast_from_file()
 
         elif choice == "export_forecast":
             # Ensure a forecast exists before proceeding
@@ -39,10 +43,7 @@ def main():
         elif choice == "export_steps":
             # Ensure an action register exists before proceeding
             if action_register is not None:
-                # TODO Implement and call function to export actions applied
-                # TODO Replace print statement with function call
-                export_path = "TODO REPLACE THIS!!!"
-                print(action_register)
+                export_path = register_menu.export_register(action_register)
                 print(f"Steps exported to {export_path}")
             else:
                 print("\nPlease create a forecast first.\n")

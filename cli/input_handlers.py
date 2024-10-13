@@ -20,6 +20,21 @@ def prompt_input_file():
         return prompt_input_file()  # Retry if no file selected
     return file_path
 
+def prompt_input_json():
+    """
+    Prompt the user to select a file using tkinter filedialog.
+    Returns the selected file path.
+    """
+    root = tk.Tk()
+    root.withdraw()  # Hide the main tkinter window
+    file_path = filedialog.askopenfilename(
+        title="Select Input JSON File", filetypes=[("JSON files", "*.json")]
+    )
+    if not file_path:
+        print("No file selected, please try again.")
+        return prompt_input_json()  # Retry if no file selected
+    return file_path
+
 
 def prompt_export_path():
     """
