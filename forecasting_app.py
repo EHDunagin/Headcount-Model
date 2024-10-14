@@ -30,7 +30,7 @@ def main():
                 print("\nPlease create a forecast base first.\n")
         
         elif choice == "forecast_from_file":
-            forecast = register_menu.forecast_from_file()
+            forecast, action_register = register_menu.forecast_from_file()
 
         elif choice == "export_forecast":
             # Ensure a forecast exists before proceeding

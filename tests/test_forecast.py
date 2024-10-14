@@ -220,20 +220,15 @@ def test_rate_forecast_valid_column():
 
 def test_rate_forecast_invalid_column():
     forecast = create_test_forecast()
-    result = rate_forecast(forecast, "invalid_column", "new_rate_column", 0.1)
-    # The original forecast should be returned unchanged
-    assert "new_rate_column" not in result.columns
-    assert_frame_equal(result, forecast)
-
+    with pytest.raises(ValueError): 
+        rate_forecast(forecast, "invalid_column", "new_rate_column", 0.1)
 
 def test_rate_forecast_non_numeric_column():
     forecast = create_test_forecast()
     forecast = forecast.with_columns(pl.col("headcount").cast(pl.Utf8))
-    result = rate_forecast(forecast, "headcount", "new_rate_column", 0.1)
-    # The original forecast should be returned unchanged
-    assert "new_rate_column" not in result.columns
-    assert_frame_equal(result, forecast)
-
+    
+    with pytest.raises(ValueError): 
+        rate_forecast(forecast, "headcount", "new_rate_column", 0.1)
 
 def test_capped_rate_forecast():
     forecast = create_test_forecast()

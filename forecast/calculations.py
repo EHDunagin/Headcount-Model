@@ -17,11 +17,11 @@ def rate_forecast(forecast, base_column, new_column_name, applied_rate):
 
     # Check if the base_column exists in the forecast
     if base_column not in forecast.columns:
-        print(f"\nColumn '{base_column}' not found in forecast. Cannot apply rate.\n")
+        raise ValueError(f"\nColumn '{base_column}' not found in forecast. Cannot apply rate.\n")
 
     # Check if the base_column is of a numeric type
     elif not forecast[base_column].dtype.is_numeric():
-        print(f"\nColumn '{base_column}' is not a numeric type. Cannot apply rate.\n")
+        raise ValueError(f"\nColumn '{base_column}' is not a numeric type. Cannot apply rate.\n")
         return forecast
 
     # Add the new column as a percentage of the base_column

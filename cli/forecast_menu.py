@@ -85,18 +85,22 @@ def add_forecast_options(forecast, action_register):
         applied_rate = input_handlers.prompt_float(
             "Enter applicable rate (e.g., 0.03 for 3%): "
         )
-        # Call function to add flat rate forecast
-        forecast = rate_forecast(forecast, base_column, new_column_name, applied_rate)
 
-        # Add step taken to action register
-        action_register["added_columns"].append(
-            {
-                "type": "flat_rate",
-                "base_column": base_column,
-                "new_column_name": new_column_name,
-                "applied_rate": applied_rate,
-            }
-        )
+        try:
+            # Call function to add flat rate forecast
+            forecast = rate_forecast(forecast, base_column, new_column_name, applied_rate)
+        except ValueError as err:
+            print(f"Invalid inputs forecast could not be added.\n{err}")
+        else:
+            # Add step taken to action register
+            action_register["added_columns"].append(
+                {
+                    "type": "flat_rate",
+                    "base_column": base_column,
+                    "new_column_name": new_column_name,
+                    "applied_rate": applied_rate,
+                }
+            )
 
     elif choice == "2":
         print_cols(forecast)
@@ -112,27 +116,30 @@ def add_forecast_options(forecast, action_register):
         cap_amount = input_handlers.prompt_positive_integer(
             "Enter maximum cap amount as integer: "
         )
-        # Call function to add capped rate forecast
-        forecast = capped_rate_forecast(
-            forecast,
-            base_column,
-            new_column_name,
-            applied_rate,
-            cap_base_column,
-            cap_amount,
-        )
-
-        # Add step taken to action register
-        action_register["added_columns"].append(
-            {
-                "type": "capped_rate",
-                "base_column": base_column,
-                "new_column_name": new_column_name,
-                "applied_rate": applied_rate,
-                "cap_base_column": cap_base_column,
-                "cap_amount": cap_amount,
-            }
-        )
+        try:
+            # Call function to add capped rate forecast
+            forecast = capped_rate_forecast(
+                forecast,
+                base_column,
+                new_column_name,
+                applied_rate,
+                cap_base_column,
+                cap_amount,
+            )
+        except ValueError as err:
+            print(f"Invalid inputs forecast could not be added.\n{err}")
+        else:
+            # Add step taken to action register iff there was no error
+            action_register["added_columns"].append(
+                {
+                    "type": "capped_rate",
+                    "base_column": base_column,
+                    "new_column_name": new_column_name,
+                    "applied_rate": applied_rate,
+                    "cap_base_column": cap_base_column,
+                    "cap_amount": cap_amount,
+                }
+            )
 
     elif choice == "3":
         print_cols(forecast)

@@ -64,7 +64,7 @@ def forecast_from_file():
     if forecast is None:
         return None
 
-    # TODO Create all added columns sequentially in order
+    # Create all added columns sequentially in order
     for column in actions['added_columns']:
 
         if column['type'] == 'flat_rate':
@@ -98,5 +98,5 @@ def forecast_from_file():
         else:
             print(f"Unknown column type: {column['type']}\nNo forecast will be added")
 
-    return forecast
+    return forecast, actions
     
