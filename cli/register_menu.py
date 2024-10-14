@@ -68,24 +68,31 @@ def forecast_from_file():
     for column in actions['added_columns']:
 
         if column['type'] == 'flat_rate':
-            # Call function to add flat rate forecast
-            forecast = rate_forecast(
-                forecast, 
-                base_column=column['base_column'], 
-                new_column_name=column['new_column_name'], 
-                applied_rate=column['applied_rate']
-            )
+            try:
+                # Call function to add flat rate forecast
+                forecast = rate_forecast(
+                    forecast, 
+                    base_column=column['base_column'], 
+                    new_column_name=column['new_column_name'], 
+                    applied_rate=column['applied_rate']
+                )
+            except ValueError as err:
+                print(f"Invalid inputs forecast could not be added.\n{err}")
             
         elif column['type'] == 'capped_rate':
-            # Call function to add capped rate forecast
-            forecast = capped_rate_forecast(
-                forecast,
-                base_column=column['base_column'],
-                new_column_name=column['new_column_name'],
-                applied_rate=column['applied_rate'],
-                cap_base_column=column['cap_base_column'],
-                cap_amount=column['cap_amount'],
-            )
+            try:
+                # Call function to add capped rate forecast
+                forecast = capped_rate_forecast(
+                    forecast,
+                    base_column=column['base_column'],
+                    new_column_name=column['new_column_name'],
+                    applied_rate=column['applied_rate'],
+                    cap_base_column=column['cap_base_column'],
+                    cap_amount=column['cap_amount'],
+                )
+            except ValueError as err:
+                print(f"Invalid inputs forecast could not be added.\n{err}")
+            
 
         elif column['type'] == 'per_head':
             # Call function to add per head forecast
