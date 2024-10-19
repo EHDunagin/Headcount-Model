@@ -2,5 +2,6 @@
 Headcount model for financial forecasting
 
 # TODO
-Trouble shoot errors when you input an invalid column name for calculated column (noted in capped rate)
+Handle errors for invalid columns in forecast from file process
+
 Remove custom RosterFileError and porpogate original errors up. CREATE A NEW BRANCH!

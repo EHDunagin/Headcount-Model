@@ -1,8 +1,9 @@
 import pytest
 
 from datetime import date
-from utilities import get_roster, RosterFileError
+from utilities import get_roster
 
+from polars.exceptions import ComputeError, ColumnNotFoundError
 
 def create_temp_csv(tmp_path, content):
     csv_path = tmp_path / "test_roster.csv"
@@ -86,7 +87,7 @@ def test_get_roster_missing_columns(tmp_path):
 """
     csv_path = create_temp_csv(tmp_path, content)
 
-    with pytest.raises(RosterFileError, match="Error in roster file structure"):
+    with pytest.raises(ColumnNotFoundError, match="unable to find column \"([^\"]+)\"; valid columns:"):
         get_roster(csv_path)
 
 
@@ -98,15 +99,15 @@ def test_get_roster_invalid_data_types(tmp_path):
 """
     csv_path = create_temp_csv(tmp_path, content)
 
-    with pytest.raises(RosterFileError, match="Data type error in roster file"):
+    with pytest.raises(ComputeError, match="could not parse `([^`]+)` as dtype `([^`]+)` at column '([^']+)'"):
         get_roster(csv_path)
 
 
-def test_get_roster_unknown_error(tmp_path):
+def test_get_roster_missing_file(tmp_path):
     # Simulate an unknown error by providing an invalid file path
     csv_path = tmp_path / "non_existent_file.csv"
 
     with pytest.raises(
-        RosterFileError, match="An unknown error occurred while processing the roster"
+        FileNotFoundError, match="The system cannot find the file specified"
     ):
         get_roster(csv_path)

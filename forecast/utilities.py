@@ -4,10 +4,6 @@ from polars.exceptions import ColumnNotFoundError, ComputeError
 from datetime import date, timedelta
 
 
-class RosterFileError(Exception):
-    """Custom exception for errors related to the roster file."""
-
-    pass
 
 
 def increase_date(start_date, months):
@@ -87,45 +83,38 @@ def get_roster(data_path):
     Input -> path to headcount roster input (string)
     Output -> Polars Dataframe of roster
     """
-    try:
-        roster = pl.read_csv(
-            data_path,
-            try_parse_dates=True,
-            columns=[
-                "Role ID",
-                "Employee ID",
-                "Employee Name",
-                "Title",
-                "Department",
-                "Employment type",
-                "Location",
-                "Start Date",
-                "End Date",
-                "Salary",
-                "Bonus",
-                "Commission",
-            ],
-            schema_overrides={
-                "Role ID": pl.Int32,
-                "Employee ID": pl.Utf8,
-                "Employee Name": pl.Utf8,
-                "Title": pl.Utf8,
-                "Department": pl.Utf8,
-                "Employment type": pl.Utf8,
-                "Location": pl.Utf8,
-                "Salary": pl.Float64,
-                "Bonus": pl.Float64,
-                "Commission": pl.Float64,
-            },
-        )
-    except ColumnNotFoundError as e:
-        raise RosterFileError(f"Error in roster file structure: {e}")
-    except ComputeError as e:
-        raise RosterFileError(f"Data type error in roster file: {e}")
-    except Exception as e:
-        raise RosterFileError(
-            f"An unknown error occurred while processing the roster: {e}"
-        )
+    
+    roster = pl.read_csv(
+        data_path,
+        try_parse_dates=True,
+        columns=[
+            "Role ID",
+            "Employee ID",
+            "Employee Name",
+            "Title",
+            "Department",
+            "Employment type",
+            "Location",
+            "Start Date",
+            "End Date",
+            "Salary",
+            "Bonus",
+            "Commission",
+        ],
+        schema_overrides={
+            "Role ID": pl.Int32,
+            "Employee ID": pl.Utf8,
+            "Employee Name": pl.Utf8,
+            "Title": pl.Utf8,
+            "Department": pl.Utf8,
+            "Employment type": pl.Utf8,
+            "Location": pl.Utf8,
+            "Salary": pl.Float64,
+            "Bonus": pl.Float64,
+            "Commission": pl.Float64,
+        },
+    )
+
 
     # Convert start and end to dates
     roster = roster.with_columns(

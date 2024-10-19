@@ -3,8 +3,8 @@ from datetime import datetime
 
 import cli.input_handlers as input_handlers
 from forecast.base import generate_forecast_base
-from forecast.utilities import RosterFileError
 from forecast.calculations import rate_forecast, capped_rate_forecast, per_head_forecast
+from polars.exceptions import ComputeError, ColumnNotFoundError
 
 
 def create_forecast_base(action_register):
@@ -48,10 +48,15 @@ def create_forecast_base(action_register):
         # Proceed with forecast logic if successful
         print("\nNew Forecast created successfully!\n")
 
-    except RosterFileError as e:
+    except ComputeError as e:
         # Handle roster file error and provide user feedback
         print(
-            f"Error in input roster file:\n\n {e}\n\nPlease update file and try again.\n"
+            f"Error in input roster file:\n\n {e}\n\nCheck that all columns contain proper data types.\nPlease update file and try again.\n"
+        )
+    except ColumnNotFoundError as e:
+        # Handle roster file error and provide user feedback
+        print(
+            f"Error in input roster file:\n\n {e}\n\nCheck that all required columns exist.\nPlease update file and try again.\n"
         )
     except Exception as e:
         # print(f"Unexpected error: {type(e).__name__} - {e}")

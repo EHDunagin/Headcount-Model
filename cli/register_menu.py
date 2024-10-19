@@ -4,7 +4,6 @@ from datetime import datetime
 
 import cli.input_handlers as input_handlers
 from forecast.base import generate_forecast_base
-from forecast.utilities import RosterFileError
 from forecast.calculations import rate_forecast, capped_rate_forecast, per_head_forecast
 
 
@@ -34,7 +33,7 @@ def forecast_from_file():
     filepath = input_handlers.prompt_input_json() 
     with open(filepath, 'r') as file:
         actions = json.load(file)
-    print(f'Action register  of type {type(actions)} \n\n {actions}')
+    # print(f'Action register  of type {type(actions)} \n\n {actions}')
     forecast = None
 
     # Create Forecast base
@@ -51,7 +50,7 @@ def forecast_from_file():
         # Proceed with forecast logic if successful
         print("\nNew Forecast created successfully!\n")
 
-    except RosterFileError as e:
+    except ValueError as e:
         print(
             f"Error in input roster file:\n\n {e}\n\nPlease update file and try again.\n"
         )
