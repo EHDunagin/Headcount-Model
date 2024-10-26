@@ -20,6 +20,7 @@ def prompt_input_file():
         return prompt_input_file()  # Retry if no file selected
     return file_path
 
+
 def prompt_input_json():
     """
     Prompt the user to select a file using tkinter filedialog.

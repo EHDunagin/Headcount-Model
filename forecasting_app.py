@@ -28,7 +28,7 @@ def main():
                 forecast = forecast_menu.add_forecast_options(forecast, action_register)
             else:
                 print("\nPlease create a forecast base first.\n")
-        
+
         elif choice == "forecast_from_file":
             forecast, action_register = register_menu.forecast_from_file()
 

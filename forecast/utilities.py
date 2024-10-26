@@ -4,8 +4,6 @@ from polars.exceptions import ColumnNotFoundError, ComputeError
 from datetime import date, timedelta
 
 
-
-
 def increase_date(start_date, months):
     """Increase a date by a given number of months"""
     if start_date.month + (months % 12) > 12:
@@ -83,7 +81,7 @@ def get_roster(data_path):
     Input -> path to headcount roster input (string)
     Output -> Polars Dataframe of roster
     """
-    
+
     roster = pl.read_csv(
         data_path,
         try_parse_dates=True,
@@ -114,7 +112,6 @@ def get_roster(data_path):
             "Commission": pl.Float64,
         },
     )
-
 
     # Convert start and end to dates
     roster = roster.with_columns(

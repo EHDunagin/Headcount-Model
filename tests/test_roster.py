@@ -5,6 +5,7 @@ from utilities import get_roster
 
 from polars.exceptions import ComputeError, ColumnNotFoundError
 
+
 def create_temp_csv(tmp_path, content):
     csv_path = tmp_path / "test_roster.csv"
     csv_path.write_text(content)
@@ -87,7 +88,9 @@ def test_get_roster_missing_columns(tmp_path):
 """
     csv_path = create_temp_csv(tmp_path, content)
 
-    with pytest.raises(ColumnNotFoundError, match="unable to find column \"([^\"]+)\"; valid columns:"):
+    with pytest.raises(
+        ColumnNotFoundError, match='unable to find column "([^"]+)"; valid columns:'
+    ):
         get_roster(csv_path)
 
 
@@ -99,7 +102,10 @@ def test_get_roster_invalid_data_types(tmp_path):
 """
     csv_path = create_temp_csv(tmp_path, content)
 
-    with pytest.raises(ComputeError, match="could not parse `([^`]+)` as dtype `([^`]+)` at column '([^']+)'"):
+    with pytest.raises(
+        ComputeError,
+        match="could not parse `([^`]+)` as dtype `([^`]+)` at column '([^']+)'",
+    ):
         get_roster(csv_path)
 
 

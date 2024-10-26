@@ -93,7 +93,9 @@ def add_forecast_options(forecast, action_register):
 
         try:
             # Call function to add flat rate forecast
-            forecast = rate_forecast(forecast, base_column, new_column_name, applied_rate)
+            forecast = rate_forecast(
+                forecast, base_column, new_column_name, applied_rate
+            )
         except ValueError as err:
             print(f"Invalid inputs forecast could not be added.\n{err}")
         else:
