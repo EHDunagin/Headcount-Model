@@ -96,7 +96,6 @@ Headcount-Model/
 ├── tests/                   # Unit tests
 │   ├── test_forecast.py     # Tests for forecast functions
 │   ├── test_cli.py          # Tests for CLI functionalities
-├── docs/                    # Documentation files
 └── requirements.txt         # List of dependencies
 ```
 ---
@@ -104,7 +103,7 @@ Headcount-Model/
 ## Testing
 
 Tests are located in the `tests/` directory and use `pytest` for testing. To run all tests:
-```
+``` 
 pytest tests/
 ```
 Individual modules can also be tested by running specific test files, e.g.:

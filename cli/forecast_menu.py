@@ -1,4 +1,4 @@
-# forecast_menu.py:
+# forecast_menu.py
 from datetime import datetime
 
 import cli.input_handlers as input_handlers

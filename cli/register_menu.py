@@ -1,4 +1,5 @@
-# record.py:
+# register_menu.py
+
 import json
 from datetime import datetime
 

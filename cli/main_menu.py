@@ -1,5 +1,4 @@
-# main_menu.py:
-
+# main_menu.pys
 
 def display_main_menu():
     print("Main Menu:")

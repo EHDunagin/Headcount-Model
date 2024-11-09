@@ -1,4 +1,4 @@
-# input_handlers.py:
+# input_handlers.py
 
 import tkinter as tk
 from tkinter import filedialog
