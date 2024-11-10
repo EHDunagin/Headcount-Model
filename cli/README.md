@@ -73,5 +73,3 @@ This CLI relies on the following modules:
 - The CLI is designed for text-based interaction, so users should be comfortable with command-line navigation.
 
 ---
-
-This README provides an overview of the CLI directory's structure and functionality. It can be used to understand the purpose of each component and how to navigate the forecasting application's text interface.
