@@ -1,8 +1,21 @@
 # utilities.py
+import logging
+
 import polars as pl
 
 from polars.exceptions import ColumnNotFoundError, ComputeError
 from datetime import date, timedelta
+from rich.console import Console
+from rich.logging import RichHandler
+
+# Set up Rich Console
+console = Console()
+
+# Set up logging with Rich
+logging.basicConfig(
+    level=logging.INFO, handlers=[RichHandler(console=console, markup=True)]
+)
+logger = logging.getLogger("utilities")
 
 
 def increase_date(start_date, months):
@@ -51,6 +64,8 @@ def generate_month_ranges(
     # Set starting point for inflation factor
     inflation_factor = 1.0
 
+    console.log("Generating month ranges...")
+
     while current_date <= end_date:
         # Calculate the first day of the next month
         if current_date.month == 12:
@@ -69,8 +84,13 @@ def generate_month_ranges(
         # Append the month range to the list
         month_ranges.append((current_date, end_of_month, inflation_factor))
 
+        # Log progress
+        logger.debug(f"Processed range: {current_date} - {end_of_month}")
+
         # Move to the next month
         current_date = next_month
+
+    console.log("[green]Month ranges generated successfully![/green]")
 
     return month_ranges
 
@@ -82,7 +102,7 @@ def get_roster(data_path):
     Input -> path to headcount roster input (string)
     Output -> Polars Dataframe of roster
     """
-
+    console.log(f"Reading roster from [blue]{data_path}[/blue]...")
     roster = pl.read_csv(
         data_path,
         try_parse_dates=True,

@@ -1,16 +1,22 @@
-# forecast_menu.py
 from datetime import datetime
+from rich.console import Console
+from rich.prompt import Prompt
+from rich.table import Table
+from rich.panel import Panel
+from rich.text import Text
+from rich import box
 
 import cli.input_handlers as input_handlers
 from forecast.base import generate_forecast_base
 from forecast.calculations import rate_forecast, capped_rate_forecast, per_head_forecast
 from polars.exceptions import ComputeError, ColumnNotFoundError
 
+console = Console()
+
 
 def create_forecast_base(action_register):
     # Prompt user for inputs
-    print("Please select a roster file.")
-
+    console.print(Panel("Please select a roster file.", style="bold cyan"))
     roster_file = input_handlers.prompt_input_file()
     start_date = input_handlers.prompt_date("Enter the start date (YYYY-MM-DD): ")
     end_date = input_handlers.prompt_date("Enter the end date (YYYY-MM-DD): ")
@@ -44,24 +50,21 @@ def create_forecast_base(action_register):
             infl_start=inflation_start,
             infl_freq=inflation_freq,
         )
-
         # Proceed with forecast logic if successful
-        print("\nNew Forecast created successfully!\n")
+        console.print("\n[green]New Forecast created successfully![/green]\n")
 
+    # Handle errors and provide user feedback
     except ComputeError as e:
-        # Handle roster file error and provide user feedback
-        print(
-            f"Error in input roster file:\n\n {e}\n\nCheck that all columns contain proper data types.\nPlease update file and try again.\n"
+        console.print(
+            f"[red bold]Error in input roster file:[/red bold] {e}\n[red]Check that all columns contain proper data types and update the file.[/red]"
         )
     except ColumnNotFoundError as e:
-        # Handle roster file error and provide user feedback
-        print(
-            f"Error in input roster file:\n\n {e}\n\nCheck that all required columns exist.\nPlease update file and try again.\n"
+        console.print(
+            f"[red bold]Error in input roster file:[/red bold] {e}\n[red]Ensure all required columns exist and try again.[/red]"
         )
     except Exception as e:
-        # print(f"Unexpected error: {type(e).__name__} - {e}")
-        print(
-            f"Unexpected error while creating forecast base: \n\n {e}\n\nPlease check your inputs and try again.\n"
+        console.print(
+            f"[red bold]Unexpected error:[/red bold] {type(e).__name__} - {e}\n[red]Please check your inputs and try again.[/red]"
         )
 
     action_register["base_inputs"] = {
@@ -77,29 +80,35 @@ def create_forecast_base(action_register):
 
 
 def add_forecast_options(forecast, action_register):
-    print("1. Add Flat Rate Forecast")
-    print("2. Add Capped Rate Forecast")
-    print("3. Add Per Head Forecast")
-    choice = input("Enter your choice: ").strip()
+    table = Table(title="Forecast Options", box=box.ROUNDED, style="bold cyan")
+    table.add_column("Option", justify="center", style="bold yellow")
+    table.add_column("Description", justify="left", style="white")
+
+    table.add_row("1", "Add Flat Rate Forecast")
+    table.add_row("2", "Add Capped Rate Forecast")
+    table.add_row("3", "Add Per Head Forecast")
+
+    console.print(table)
+    choice = Prompt.ask(
+        "[bold cyan]Enter your choice[/bold cyan]", choices=["1", "2", "3"]
+    )
 
     if choice == "1":
         print_cols(forecast)
-        # Get inputs
         base_column = input_handlers.prompt_string("Enter base column name: ")
         new_column_name = input_handlers.prompt_string("Enter new column name: ")
         applied_rate = input_handlers.prompt_float(
             "Enter applicable rate (e.g., 0.03 for 3%): "
         )
-
         try:
-            # Call function to add flat rate forecast
             forecast = rate_forecast(
                 forecast, base_column, new_column_name, applied_rate
             )
         except ValueError as err:
-            print(f"Invalid inputs forecast could not be added.\n{err}")
+            console.print(
+                f"[red]Invalid inputs: Forecast could not be added.[/red] {err}"
+            )
         else:
-            # Add step taken to action register
             action_register["added_columns"].append(
                 {
                     "type": "flat_rate",
@@ -111,7 +120,6 @@ def add_forecast_options(forecast, action_register):
 
     elif choice == "2":
         print_cols(forecast)
-        # Get inputs
         base_column = input_handlers.prompt_string("Enter base column name: ")
         new_column_name = input_handlers.prompt_string("Enter new column name: ")
         cap_base_column = input_handlers.prompt_string(
@@ -124,7 +132,6 @@ def add_forecast_options(forecast, action_register):
             "Enter maximum cap amount as integer: "
         )
         try:
-            # Call function to add capped rate forecast
             forecast = capped_rate_forecast(
                 forecast,
                 base_column,
@@ -134,9 +141,10 @@ def add_forecast_options(forecast, action_register):
                 cap_amount,
             )
         except ValueError as err:
-            print(f"Invalid inputs forecast could not be added.\n{err}")
+            console.print(
+                f"[red]Invalid inputs: Forecast could not be added.[/red] {err}"
+            )
         else:
-            # Add step taken to action register iff there was no error
             action_register["added_columns"].append(
                 {
                     "type": "capped_rate",
@@ -147,16 +155,12 @@ def add_forecast_options(forecast, action_register):
                     "cap_amount": cap_amount,
                 }
             )
-
     elif choice == "3":
         print_cols(forecast)
-        # Get inputs
         new_column_name = input_handlers.prompt_string("Enter new column name: ")
         amount = input_handlers.prompt_float("Enter per head amount: ")
-        # Call function to add per head forecast
         forecast = per_head_forecast(forecast, new_column_name, amount)
 
-        # Add step taken to action register
         action_register["added_columns"].append(
             {
                 "type": "per_head",
@@ -165,17 +169,16 @@ def add_forecast_options(forecast, action_register):
             }
         )
 
-    else:
-        print("Invalid choice, returning to menu.")
-
     return forecast
 
 
 def export_forecast(forecast):
     """
-    Export the forecast to a selected location
+    Export the forecast to a selected location as a csv file
     """
-    print("\nPlease select directory to create forecast. \n")
+    console.print(
+        "\n[cyan bold]Please select directory to create forecast.[/cyan bold]\n"
+    )
     export_path = (
         input_handlers.prompt_export_path()
         + "/"
@@ -183,6 +186,7 @@ def export_forecast(forecast):
         + "_forecast.csv"
     )
     forecast.write_csv(export_path)
+    console.print(f"[green]Forecast exported successfully to {export_path}[/green]")
     return export_path
 
 
@@ -191,12 +195,11 @@ def print_cols(forecast):
     Input - Polars DataFrame
     Prints column names and data types
     """
+    table = Table(title="Forecast Columns", box=box.SIMPLE, style="bold green")
+    table.add_column("Column Name", justify="left", style="white")
+    table.add_column("Data Type", justify="center", style="yellow")
 
-    cols = zip(forecast.columns, forecast.dtypes)
+    for column, dtype in zip(forecast.columns, forecast.dtypes):
+        table.add_row(column, str(dtype))
 
-    print("Column", " " * 50, "Dtype")
-    print("-" * 64)
-    for column in cols:
-        print(
-            column[0], " " * (62 - len(str(column[0])) - len(str(column[1]))), column[1]
-        )
+    console.print(table)
