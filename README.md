@@ -14,7 +14,8 @@ A modular application for forecasting headcount, compensation, and other employe
 5. [Directory Structure](#directory-structure)
 6. [Testing](#testing)
 7. [Data](#data)
-8. [License](#license)
+8. [Download](#download)
+9. [License](#license)
 
 ---
 
@@ -93,6 +94,8 @@ Headcount-Model/
 │   ├── calculations.py      # Functions for specific forecast models
 │   ├── utilities.py         # Utility functions, including CSV handling
 ├── data/                    # Folder for input and output data
+├── download/                # Folder for downloadable compiled executable
+│   ├── forecasting_app.exe  # Compiled executable
 ├── tests/                   # Unit tests
 │   ├── test_forecast.py     # Tests for forecast functions
 │   ├── test_cli.py          # Tests for CLI functionalities
@@ -133,6 +136,9 @@ The application requires a roster file in CSV format containing employee and rol
 
 Ensure that your CSV file includes these columns with the correct data types, as the application relies on this structure for accurate forecasting.
 
+## Download
+
+A compiled executable is available for download for users who do not have Python installed. This was compiled on Windows 11 and may not work on other systems.
 
 
 ## License
